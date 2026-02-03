@@ -1,38 +1,37 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Be Compliance - API Externa",
-    "description": "API externa do sistema Be Compliance para integrações de terceiros.\n\n## Visao Geral\n\nEsta API fornece funcionalidades para:\n- Gerenciamento de analises de terceiros (Due Diligence de Pessoas Juridicas)\n- Gerenciamento de pessoas fisicas para Due Diligence (BeNP)\n\n## Autenticacao\n\n### API de Pessoa Juridica (Third Party Analysis)\nUtilizada para endpoints `/ext/v1/{app_key}/third-party-analysis/*`.\n```\nAuthorization: Bearer <jwt_token>\n```\n\n### API de Pessoa Fisica (BeNP)\nUtilizada para endpoints `/ext/{key}/np/*`.\n```\nAuthorization: Bearer <api_key>\n```",
-    "version": "1.0.0",
-    "contact": {
-      "name": "Be Compliance",
-      "email": "suporte@becompliance.com",
-      "url": "https://docs.becompliance.com"
-    },
-    "license": {
-      "name": "Proprietary"
-    }
+    "title": "Be Compliance - API",
+    "description": "API do sistema Be Compliance para integrações de terceiros.\n\n## Visao Geral\n\nEsta API fornece funcionalidades para:\n- Gerenciamento de analises de terceiros (Due Diligence de Pessoas Juridicas)\n- Gerenciamento de pessoas fisicas para Due Diligence (BeNP)\n\n## Autenticacao\n\n### API de Pessoa Juridica (Third Party Analysis)\nUtilizada para endpoints `/ext/v1/{app_id}/third-party-analysis/*`.\n```\nAuthorization: Bearer <jwt_token>\n```\n\n### API de Pessoa Fisica (BeNP)\nUtilizada para endpoints `/ext/{key}/np/*`.\n```\nAuthorization: Bearer <api_key>\n```",
+    "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "https://api.becompliance.com/ext/v1/{app_key}",
+      "url": "https://api.becompliance.com/ext/v1/{app_id}",
       "description": "Producao - Third Party Analysis (Pessoa Juridica)",
       "variables": {
-        "app_key": {
-          "description": "app_key da empresa"
+        "app_id": {
+          "description": "app_id da empresa",
+          "default": ""
         }
       }
     },
     {
-      "url": "https://api-benp.becompliance.com",
-      "description": "Producao - BeNP (Pessoa Fisica)"
-    },
-    {
-      "url": "https://api-benp-staging.becompliance.com",
-      "description": "Staging - BeNP (Pessoa Fisica)"
+      "url": "https://api-benp.becompliance.com/ext/{app_id}",
+      "description": "Producao - BeNP (Pessoa Fisica)",
+      "variables": {
+        "app_id": {
+          "description": "app_id da empresa",
+          "default": ""
+        }
+      }
     }
   ],
   "tags": [
+    {
+      "name": "Authentication",
+      "description": "Endpoints de autenticacao para obter tokens de acesso"
+    },
     {
       "name": "Third Party Analysis",
       "description": "Endpoints para gerenciamento de analises de terceiros - Pessoa Juridica (Due Diligence)"
@@ -43,6 +42,70 @@
     }
   ],
   "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Realizar login",
+        "description": "Autentica o usuario e retorna um token de acesso JWT para uso nos demais endpoints da API.",
+        "operationId": "login",
+        "parameters": [
+          
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "email@email.com",
+                "password": "userPassword"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                  "token_type": "bearer"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais invalidas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "Credenciais invalidas"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erro de validacao",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/third-party-analysis": {
       "get": {
         "tags": ["Third Party Analysis"],
@@ -205,17 +268,6 @@
               "type": "string"
             },
             "example": "010120241234"
-          },
-          {
-            "name": "queries",
-            "in": "query",
-            "description": "Se 'true', retorna tambem os resultados das consultas realizadas",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": ["true", "false"],
-              "default": "false"
-            }
           }
         ],
         "responses": {
@@ -347,7 +399,7 @@
         }
       }
     },
-    "/ext/{key}/np/": {
+    "/np/": {
       "get": {
         "tags": ["Natural Person"],
         "summary": "Listar Pessoas Fisicas",
@@ -355,13 +407,10 @@
         "operationId": "listNaturalPersons",
         "security": [
           {
-            "apiKeyAuth": []
+            "bearerAuth": []
           }
         ],
         "parameters": [
-          {
-            "$ref": "#/components/parameters/KeyPath"
-          },
           {
             "name": "np_type",
             "in": "query",
@@ -469,13 +518,10 @@
         "operationId": "createNaturalPerson",
         "security": [
           {
-            "apiKeyAuth": []
+            "bearerAuth": []
           }
         ],
         "parameters": [
-          {
-            "$ref": "#/components/parameters/KeyPath"
-          }
         ],
         "requestBody": {
           "required": true,
@@ -539,13 +585,10 @@
         "operationId": "getNaturalPersonByCode",
         "security": [
           {
-            "apiKeyAuth": []
+            "bearerAuth": []
           }
         ],
         "parameters": [
-          {
-            "$ref": "#/components/parameters/KeyPath"
-          },
           {
             "name": "code",
             "in": "path",
@@ -594,17 +637,11 @@
         "scheme": "bearer",
         "bearerFormat": "JWT",
         "description": "Token JWT para Third Party Analysis. Obtido atraves do endpoint de autenticacao."
-      },
-      "apiKeyAuth": {
-        "type": "apiKey",
-        "name": "Authorization",
-        "in": "header",
-        "description": "Token de API para Pessoa Fisica (BeNP). Formato: `Bearer <api_key>`"
       }
     },
     "parameters": {
-      "KeyPath": {
-        "name": "key",
+      "AppId": {
+        "name": "app_id",
         "in": "path",
         "required": true,
         "schema": {
@@ -659,6 +696,38 @@
       }
     },
     "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email do usuario",
+            "example": "email@email.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Senha do usuario",
+            "example": "userPassword"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "Token JWT para autenticacao nos demais endpoints",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "token_type": {
+            "type": "string",
+            "description": "Tipo do token",
+            "example": "bearer"
+          }
+        }
+      },
       "ErrorResponse": {
         "type": "object",
         "properties": {
@@ -1259,11 +1328,11 @@
         "properties": {
           "first": {
             "type": "string",
-            "example": "https://api.becompliance.com/ext/v1/{app_key}/third-party-analysis?page=1"
+            "example": "https://api.becompliance.com/ext/v1/{app_id}/third-party-analysis?page=1"
           },
           "last": {
             "type": "string",
-            "example": "https://api.becompliance.com/ext/v1/{app_key}/third-party-analysis?page=10"
+            "example": "https://api.becompliance.com/ext/v1/{app_id}/third-party-analysis?page=10"
           },
           "prev": {
             "type": "string",
@@ -1292,7 +1361,7 @@
           },
           "path": {
             "type": "string",
-            "example": "https://api.becompliance.com/ext/v1/{app_key}/third-party-analysis"
+            "example": "https://api.becompliance.com/ext/v1/{app_id}/third-party-analysis"
           },
           "per_page": {
             "type": "integer",
