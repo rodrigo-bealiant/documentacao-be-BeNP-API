@@ -1,0 +1,536 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "BeNP - API Externa",
+    "description": "API externa do sistema BeNP (Background Check / Natural Person) para integrações de terceiros.\n\n## Visão Geral\n\nEsta API fornece funcionalidades para:\n- Gerenciamento de pessoas físicas para Due Diligence\n\n## Autenticação\n\n### API de Pessoa Física (`api_key`)\nUtilizada para endpoints `/ext/{key}/np/*`.\n```\nAuthorization: Bearer <api_key>\n```",
+    "version": "1.0.0",
+    "contact": {
+      "name": "BeCompliance Support",
+      "email": "helpbe@becompliance.com",
+      "url": "https://docs.becompliance.com"
+    },
+    "license": {
+      "name": "Proprietary"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api-benp.becompliance.com",
+      "description": "Production"
+    },
+    {
+      "url": "https://api-benp-staging.becompliance.com",
+      "description": "Staging"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Natural Person",
+      "description": "API para gerenciamento de pessoas físicas"
+    }
+  ],
+  "paths": {
+    "/ext/{key}/np/": {
+      "get": {
+        "tags": [
+          "Natural Person"
+        ],
+        "summary": "Listar Pessoas Físicas",
+        "description": "Retorna uma lista paginada de pessoas físicas cadastradas.",
+        "operationId": "listNaturalPersons",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/KeyPath"
+          },
+          {
+            "name": "np_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "internal",
+                "external"
+              ]
+            },
+            "description": "Tipo de pessoa física"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Número da página"
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Código da due diligence"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Nome da pessoa física (busca parcial)"
+          },
+          {
+            "name": "cpf",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "CPF da pessoa (deve ser válido)"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "approved",
+                "pending",
+                "rejected"
+              ]
+            },
+            "description": "Status da due diligence"
+          },
+          {
+            "name": "internal_identification",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identificação interna"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pessoas físicas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NaturalPersonListResponse"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "code": 12345,
+                      "internal_identification": "EMP-001",
+                      "name": "João da Silva",
+                      "cpf": "123.456.789-01",
+                      "process_status": "completed",
+                      "status": "approved",
+                      "automatic_risk": "low",
+                      "risk": "low",
+                      "notes": "Análise concluída",
+                      "analysis_deadline": "2024-02-15",
+                      "contract_value": 50000.00,
+                      "created_at": "2024-01-10T14:30:00.000Z",
+                      "updated_at": "2024-01-15T10:00:00.000Z"
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "per_page": 20,
+                    "total": 150
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Natural Person"
+        ],
+        "summary": "Criar Pessoa Física",
+        "description": "Cria um novo registro de pessoa física para análise de Due Diligence.",
+        "operationId": "createNaturalPerson",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/KeyPath"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNaturalPerson"
+              },
+              "example": {
+                "cpf": "12345678901",
+                "np_type": "external",
+                "type": "fornecedor",
+                "contract_value": 50000.00,
+                "notes": "Novo fornecedor para análise",
+                "internal_identification": "FORN-2024-001",
+                "analysis_deadline": "2024-03-01"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pessoa física criada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NaturalPersonDetail"
+                },
+                "example": {
+                  "code": 12346,
+                  "internal_identification": "FORN-2024-001",
+                  "name": null,
+                  "cpf": "123.456.789-01",
+                  "process_status": "pending",
+                  "status": "pending",
+                  "automatic_risk": null,
+                  "risk": null,
+                  "notes": "Novo fornecedor para análise",
+                  "analysis_deadline": "2024-03-01",
+                  "contract_value": 50000.00,
+                  "created_at": "2024-01-20T09:00:00.000Z",
+                  "updated_at": "2024-01-20T09:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/ext/{key}/np/{code}": {
+      "get": {
+        "tags": [
+          "Natural Person"
+        ],
+        "summary": "Obter Pessoa Física por Código",
+        "description": "Retorna os detalhes de uma pessoa física específica pelo código.",
+        "operationId": "getNaturalPersonByCode",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/KeyPath"
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Código da due diligence"
+          },
+          {
+            "name": "np_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "internal",
+                "external"
+              ]
+            },
+            "description": "Tipo de pessoa física"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalhes da pessoa física",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NaturalPersonDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header",
+        "description": "Token de API para Pessoa Física. Formato: `Bearer <api_key>`"
+      }
+    },
+    "parameters": {
+      "KeyPath": {
+        "name": "key",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Chave da empresa"
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Não autorizado - Token inválido ou ausente",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "message": "Token inválido ou expirado"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso não encontrado",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "message": "Recurso não encontrado"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Erro de validação",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationErrorResponse"
+            },
+            "example": {
+              "message": "Validation Error",
+              "data": {
+                "cpf": [
+                  "CPF inválido"
+                ],
+                "analysis_deadline": [
+                  "A data deve ser futura"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "Página atual"
+          },
+          "per_page": {
+            "type": "integer",
+            "description": "Itens por página"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total de registros"
+          }
+        }
+      },
+      "NaturalPersonListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NaturalPersonDetail"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        }
+      },
+      "NaturalPersonDetail": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "Código único da due diligence"
+          },
+          "internal_identification": {
+            "type": "string",
+            "description": "Identificação interna definida pelo cliente"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Nome completo da pessoa física"
+          },
+          "cpf": {
+            "type": "string",
+            "description": "CPF formatado"
+          },
+          "process_status": {
+            "type": "string",
+            "description": "Status do processo de análise"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status da due diligence"
+          },
+          "automatic_risk": {
+            "type": "string",
+            "nullable": true,
+            "description": "Risco calculado automaticamente pelo sistema"
+          },
+          "risk": {
+            "type": "string",
+            "nullable": true,
+            "description": "Risco final atribuído"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true,
+            "description": "Observações sobre a análise"
+          },
+          "analysis_deadline": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "Prazo para conclusão da análise"
+          },
+          "contract_value": {
+            "type": "number",
+            "nullable": true,
+            "description": "Valor do contrato associado"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Data de criação do registro"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Data da última atualização"
+          }
+        }
+      },
+      "CreateNaturalPerson": {
+        "type": "object",
+        "required": [
+          "cpf",
+          "np_type"
+        ],
+        "properties": {
+          "cpf": {
+            "type": "string",
+            "description": "CPF válido (apenas números ou formatado)"
+          },
+          "np_type": {
+            "type": "string",
+            "enum": [
+              "internal",
+              "external"
+            ],
+            "description": "Tipo: internal (colaborador) ou external (terceiro)"
+          },
+          "type": {
+            "type": "string",
+            "description": "Tipo/categoria da pessoa física (ex: fornecedor, cliente)"
+          },
+          "contract_value": {
+            "type": "number",
+            "description": "Valor do contrato associado"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Observações sobre o registro"
+          },
+          "internal_identification": {
+            "type": "string",
+            "description": "Identificação interna do cliente"
+          },
+          "analysis_deadline": {
+            "type": "string",
+            "format": "date",
+            "description": "Prazo para análise (deve ser data futura, formato: YYYY-MM-DD)"
+          }
+        }
+      }
+    }
+  }
+}
