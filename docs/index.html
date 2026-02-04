@@ -30,6 +30,38 @@
             font-size: 36px;
             color: #3b4151;
         }
+        /* Classes para controle de visibilidade das seções */
+        .hide-natural-person [data-tag="Natural Person"],
+        .hide-natural-person #operations-tag-Natural_Person,
+        .hide-natural-person [id^="operations-Natural_Person"],
+        .hide-natural-person .opblock-tag-section:has([data-tag="Natural Person"]),
+        .hide-natural-person .opblock-tag[data-tag="Natural Person"],
+        .hide-natural-person .opblock-tag[id="operations-tag-Natural_Person"] {
+            display: none !important;
+        }
+        /* Esconde o wrapper da seção Natural Person */
+        .hide-natural-person .opblock-tag-section[data-tag="Natural Person"] {
+            display: none !important;
+        }
+        .show-only-natural-person [data-tag="Authentication"],
+        .show-only-natural-person [data-tag="Third Party Analysis"],
+        .show-only-natural-person #operations-tag-Authentication,
+        .show-only-natural-person #operations-tag-Third_Party_Analysis,
+        .show-only-natural-person [id^="operations-Authentication"],
+        .show-only-natural-person [id^="operations-Third_Party_Analysis"],
+        .show-only-natural-person .opblock-tag-section:has([data-tag="Authentication"]),
+        .show-only-natural-person .opblock-tag-section:has([data-tag="Third Party Analysis"]),
+        .show-only-natural-person .opblock-tag[data-tag="Authentication"],
+        .show-only-natural-person .opblock-tag[data-tag="Third Party Analysis"],
+        .show-only-natural-person .opblock-tag[id="operations-tag-Authentication"],
+        .show-only-natural-person .opblock-tag[id="operations-tag-Third_Party_Analysis"] {
+            display: none !important;
+        }
+        /* Esconde os wrappers das seções Authentication e Third Party Analysis */
+        .show-only-natural-person .opblock-tag-section[data-tag="Authentication"],
+        .show-only-natural-person .opblock-tag-section[data-tag="Third Party Analysis"] {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -60,6 +92,91 @@
                 tryItOutEnabled: false // Desabilitar "Try it out" em produção
             });
             window.ui = ui;
+
+            // Função para controlar visibilidade das seções baseado no servidor selecionado
+            function updateSectionsVisibility() {
+                const swaggerContainer = document.getElementById('swagger-ui');
+                const serverSelect = document.querySelector('.servers-title + .servers select, .servers select');
+
+                if (!serverSelect || !swaggerContainer) return;
+
+                const selectedIndex = serverSelect.selectedIndex;
+
+                // Remove classes anteriores
+                swaggerContainer.classList.remove('hide-natural-person', 'show-only-natural-person');
+
+                // Encontra todas as seções de tags
+                const tagSections = document.querySelectorAll('.opblock-tag-section');
+
+                tagSections.forEach(function(section) {
+                    const tagHeader = section.querySelector('.opblock-tag');
+                    if (!tagHeader) return;
+
+                    const tagId = tagHeader.getAttribute('id') || '';
+                    const tagDataTag = tagHeader.getAttribute('data-tag') || '';
+
+                    // Verifica se é Natural Person
+                    const isNaturalPerson = tagId.includes('Natural_Person') ||
+                                           tagId.includes('Natural-Person') ||
+                                           tagDataTag.includes('Natural Person');
+
+                    // Verifica se é Authentication
+                    const isAuthentication = tagId.includes('Authentication') ||
+                                            tagDataTag.includes('Authentication');
+
+                    // Verifica se é Third Party Analysis
+                    const isThirdParty = tagId.includes('Third_Party_Analysis') ||
+                                        tagId.includes('Third-Party-Analysis') ||
+                                        tagDataTag.includes('Third Party Analysis');
+
+                    if (selectedIndex === 0) {
+                        // Third Party Analysis - esconde Natural Person
+                        if (isNaturalPerson) {
+                            section.style.display = 'none';
+                        } else {
+                            section.style.display = '';
+                        }
+                    } else if (selectedIndex === 1) {
+                        // BeNP - mostra APENAS Natural Person
+                        if (isNaturalPerson) {
+                            section.style.display = '';
+                        } else {
+                            section.style.display = 'none';
+                        }
+                    } else {
+                        // Outro servidor - mostra tudo
+                        section.style.display = '';
+                    }
+                });
+
+                // Também aplica a classe CSS como fallback
+                if (selectedIndex === 0) {
+                    swaggerContainer.classList.add('hide-natural-person');
+                } else if (selectedIndex === 1) {
+                    swaggerContainer.classList.add('show-only-natural-person');
+                }
+            }
+
+            // Observa mudanças no DOM para detectar quando o seletor de servidor é renderizado
+            let serverSelectInitialized = false;
+
+            const observer = new MutationObserver(function(mutations) {
+                const serverSelect = document.querySelector('.servers-title + .servers select, .servers select');
+                const tagSections = document.querySelectorAll('.opblock-tag-section');
+
+                if (serverSelect && !serverSelectInitialized) {
+                    serverSelectInitialized = true;
+                    // Adiciona listener para mudanças no seletor
+                    serverSelect.addEventListener('change', updateSectionsVisibility);
+                }
+
+                // Aplica visibilidade sempre que houver mudanças e existirem seções de tags
+                if (serverSelect && tagSections.length > 0) {
+                    updateSectionsVisibility();
+                }
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
         };
     </script>
 </body>
