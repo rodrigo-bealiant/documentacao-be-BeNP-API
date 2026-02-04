@@ -577,7 +577,7 @@
         }
       }
     },
-    "/ext/{key}/np/{code}": {
+    "/np/{code}": {
       "get": {
         "tags": ["Natural Person"],
         "summary": "Obter Pessoa Fisica por Codigo",
