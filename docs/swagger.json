@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Be Compliance - API",
-    "description": "API do sistema Be Compliance para integrações de terceiros.\n\n## Visão Geral\n\nEsta API fornece funcionalidades para:\n- Gerenciamento de analises de terceiros (Due Diligence de Pessoas Juridicas)\n- Gerenciamento de pessoas fisicas para Due Diligence (BeNP)\n\n## Autenticacao\n\n### API de Pessoa Juridica (Third Party Analysis)\nUtilizada para endpoints `/ext/v1/{app_id}/third-party-analysis/*`.\n```\nAuthorization: Bearer <jwt_token>\n```\n\n### API de Pessoa Fisica (BeNP)\nUtilizada para endpoints `/ext/{key}/np/*`.\n```\nAuthorization: Bearer <api_key>\n```",
+    "description": "API do sistema Be Compliance para integrações de terceiros.\n\n## Visão Geral\n\nEsta API fornece funcionalidades para:\n- Gerenciamento de analises de terceiros (Due Diligence de Pessoas Juridicas)\n- Gerenciamento de pessoas fisicas para Due Diligence (BeNP)\n\n## Autenticacao\n\n### API de Pessoa Juridica (Third Party Analysis)\nUtilizada para endpoints `/ext/v1/{app_id}/third-party-analysis/*`.\n```\nAuthorization: Bearer <token>\n```\n\n### API de Pessoa Fisica (BeNP)\nUtilizada para endpoints `/ext/{key}/np/*`.\n```\nAuthorization: Bearer <token>\n```",
     "version": "1.0.0"
   },
   "servers": [
